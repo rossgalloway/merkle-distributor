@@ -26,11 +26,10 @@ contract MerkleDistributor is IMerkleDistributor, ReentrancyGuard {
     mapping(uint256 => uint256) private claimedBitMap;
 
     constructor(address token_, bytes32 merkleRoot_, address factory_, address yfi_, uint256 duration_) {
-        token = token_;
+        token = token_; // YFI
         merkleRoot = merkleRoot_;
-        factory = IVestingFactory(factory_);
-        yfi = yfi_;
-        duration = duration_;
+        factory = IVestingFactory(factory_); // https://etherscan.io/address/0x200C92Dd85730872Ab6A1e7d5E40A067066257cF#code
+        duration = duration_; //152 days (5 months)
     }
 
     function isClaimed(uint256 index) public view override returns (bool) {
@@ -64,7 +63,7 @@ contract MerkleDistributor is IMerkleDistributor, ReentrancyGuard {
         // Mark it claimed and send the token.
         _setClaimed(index);
         factory.deploy_vesting_contract(
-            yfi,
+            token,
             account,
             amount,
             duration * 24 * 60 * 60 //duration in days converted to seconds

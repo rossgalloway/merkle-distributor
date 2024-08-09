@@ -5,17 +5,19 @@ pragma solidity >=0.5.0;
 interface IMerkleDistributor {
     // Returns the address of the token distributed by this contract.
     function token() external view returns (address);
+
     // Returns the merkle root of the merkle tree containing account balances available to claim.
     function merkleRoot() external view returns (bytes32);
+
     // Returns true if the index has been marked claimed.
     function isClaimed(uint256 index) external view returns (bool);
+
     // Claim the given amount of the token to the given address. Reverts if the inputs are invalid.
     function claim(uint256 index, address account, uint256 amount, bytes32[] calldata merkleProof) external;
 
     // Returns the address of the vesting factory.
     function factory() external view returns (address);
-    // Returns the address of the YFI token.
-    function yfi() external view returns (address);
+
     // Returns the duration for the vesting contract.
     function duration() external view returns (uint256);
 
