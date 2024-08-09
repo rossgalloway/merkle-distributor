@@ -19,13 +19,12 @@ contract MerkleDistributor is IMerkleDistributor, ReentrancyGuard {
     address public immutable override token;
     bytes32 public immutable override merkleRoot;
     IVestingFactory public immutable factory;
-    address public immutable yfi;
     uint256 public immutable duration;
 
     // This is a packed array of booleans.
     mapping(uint256 => uint256) private claimedBitMap;
 
-    constructor(address token_, bytes32 merkleRoot_, address factory_, address yfi_, uint256 duration_) {
+    constructor(address token_, bytes32 merkleRoot_, address factory_, uint256 duration_) {
         token = token_; // YFI
         merkleRoot = merkleRoot_;
         factory = IVestingFactory(factory_); // https://etherscan.io/address/0x200C92Dd85730872Ab6A1e7d5E40A067066257cF#code
