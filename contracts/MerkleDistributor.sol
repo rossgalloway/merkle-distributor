@@ -1,23 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity =0.8.17;
 
-import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import {IMerkleDistributor} from "./interfaces/IMerkleDistributor.sol";
+import {IERC20, SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {MerkleProof} from '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import {IMerkleDistributor} from './interfaces/IMerkleDistributor.sol';
 
 error AlreadyClaimed();
 error InvalidProof();
 
 interface IVestingFactory {
-    function deploy_vesting_contract(
-        address token,
-        address account,
-        uint256 amount,
-        uint256 duration
-    ) external;
+    function deploy_vesting_contract(address token, address account, uint256 amount, uint256 duration) external;
 }
 
-contract MerkleDistributor is IMerkleDistributor {
+contract MerkleDistributor is IMerkleDistributor, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     address public immutable override token;
@@ -29,13 +25,7 @@ contract MerkleDistributor is IMerkleDistributor {
     // This is a packed array of booleans.
     mapping(uint256 => uint256) private claimedBitMap;
 
-    constructor(
-        address token_,
-        bytes32 merkleRoot_,
-        address factory_,
-        address yfi_,
-        uint256 duration_
-    ) {
+    constructor(address token_, bytes32 merkleRoot_, address factory_, address yfi_, uint256 duration_) {
         token = token_;
         merkleRoot = merkleRoot_;
         factory = IVestingFactory(factory_);
@@ -57,11 +47,14 @@ contract MerkleDistributor is IMerkleDistributor {
         claimedBitMap[claimedWordIndex] = claimedBitMap[claimedWordIndex] | (1 << claimedBitIndex);
     }
 
-    function claim(uint256 index, address account, uint256 amount, bytes32[] calldata merkleProof)
-        public
-        virtual
-        override
-    {
+    function claim(
+        uint256 index,
+        address account,
+        uint256 amount,
+        bytes32[] calldata merkleProof
+    ) public virtual override nonReentrant {
+        require(account != address(0), 'Invalid account address');
+        require(amount > 0, 'Amount must be greater than zero');
         if (isClaimed(index)) revert AlreadyClaimed();
 
         // Verify the merkle proof.
