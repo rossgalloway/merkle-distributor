@@ -13,21 +13,21 @@ interface IVestingFactory {
     function deploy_vesting_contract(address token, address account, uint256 amount, uint256 duration) external;
 }
 
-contract MerkleDistributor is IMerkleDistributor, ReentrancyGuard {
+abstract contract MerkleDistributor is IMerkleDistributor, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     address public immutable override token;
     bytes32 public immutable override merkleRoot;
-    IVestingFactory public immutable factory;
+    IVestingFactory public immutable VestingFactory;
     uint256 public immutable duration;
 
     // This is a packed array of booleans.
     mapping(uint256 => uint256) private claimedBitMap;
 
-    constructor(address token_, bytes32 merkleRoot_, address factory_, uint256 duration_) {
+    constructor(address token_, bytes32 merkleRoot_, address VestingFactory_, uint256 duration_) {
         token = token_; // YFI
         merkleRoot = merkleRoot_;
-        factory = IVestingFactory(factory_); // https://etherscan.io/address/0x200C92Dd85730872Ab6A1e7d5E40A067066257cF#code
+        VestingFactory = IVestingFactory(VestingFactory_); // https://etherscan.io/address/0x200C92Dd85730872Ab6A1e7d5E40A067066257cF#code
         duration = duration_; //152 days (5 months)
     }
 
@@ -61,7 +61,8 @@ contract MerkleDistributor is IMerkleDistributor, ReentrancyGuard {
 
         // Mark it claimed and send the token.
         _setClaimed(index);
-        factory.deploy_vesting_contract(
+        IERC20(token).approve(address(VestingFactory), amount);
+        VestingFactory.deploy_vesting_contract(
             token,
             account,
             amount,
